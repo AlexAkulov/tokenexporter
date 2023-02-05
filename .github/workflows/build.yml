@@ -30,7 +30,7 @@ jobs:
           DOCKER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_USER: ${{ github.actor }}
         run: |
-          docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile --build-arg .
+          docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .
           docker image tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REGISTRY}/${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}
           docker image tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REGISTRY}/${DOCKER_REPO}/${DOCKER_IMAGE}:latest
           echo "GITHUB_REF: ${GITHUB_REF##*/}"
