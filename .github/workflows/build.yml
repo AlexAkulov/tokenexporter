@@ -6,7 +6,6 @@ on:
       - main
     paths-ignore:
       - "deploy/**"
-      - ".github/**"
   workflow_dispatch:
 
 jobs:
@@ -23,7 +22,7 @@ jobs:
 
       - name: Building docker image
         env:
-          DOCKER_REGISTRY: docker.pkg.github.com
+          DOCKER_REGISTRY: ghcr.io
           DOCKER_REPO: alexakulov/tokenexporter
           DOCKER_IMAGE: tokenexporter
           DOCKER_TAG: ${{ steps.vars.outputs.sha_short }}
