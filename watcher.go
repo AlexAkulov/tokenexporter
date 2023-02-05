@@ -122,7 +122,7 @@ func (w Watcher) Start(listen string) error {
 				go func(c string) {
 					log.Printf("Updating tokens on '%s'", c)
 					for _, item := range w.items[c] {
-						balance := w.getTokenBalance(w.geth[c], item)
+						balance := w.getTokenBalance(c, item)
 						item.Metric.Set(balance)
 					}
 					log.Printf("Updated tokens on '%s'", c)
@@ -147,31 +147,32 @@ func (w *Watcher) tokenCaller(eth *ethclient.Client, address common.Address) (*M
 }
 
 // Fetch ETH balance from Geth server
-func (w *Watcher) getTokenBalance(eth *ethclient.Client, item *watchItem) float64 {
+func (w *Watcher) getTokenBalance(chain string, item *watchItem) float64 {
 	if (item.Token == "0x0000000000000000000000000000000000000000") ||
 		(item.Token == "") {
-		return w.getGasBalance(eth, item)
+		return w.getGasBalance(chain, item)
 	}
-	caller, err := w.tokenCaller(eth, common.HexToAddress(item.Token))
+
+	caller, err := w.tokenCaller(w.geth[chain], common.HexToAddress(item.Token))
 	if err != nil {
-		log.Println("tokenCaller:", err)
-		return 0
+		log.Printf("Can't tokenCaller for chain='%s', wallet='%s', token='%s': %v", chain, item.Wallet, item.Token, err)
+		return -1
 	}
 	balance, err := caller.BalanceOf(nil, common.HexToAddress(item.Wallet))
 	if err != nil {
-		log.Println("BalanceOf:", err)
-		return 0
+		log.Printf("Can't BalanceOf for chain='%s', wallet='%s', token='%s': %v", chain, item.Wallet, item.Token, err)
+		return -1
 	}
 	return toFloat(balance, item.Decimals)
 }
 
-func (w *Watcher) getGasBalance(eth *ethclient.Client, item *watchItem) float64 {
-	balance, err := eth.BalanceAt(
+func (w *Watcher) getGasBalance(chain string, item *watchItem) float64 {
+	balance, err := w.geth[chain].BalanceAt(
 		context.Background(), common.HexToAddress(item.Wallet), nil,
 	)
 	if err != nil {
-		fmt.Sprintln("getGasBalance:", err)
-		return 0.0
+		log.Printf("Can't BalanceAt for chain='%s', wallet='%s', token='%s': %v", chain, item.Wallet, item.Token, err)
+		return -1
 	}
 	return toFloat(balance, item.Decimals)
 }
